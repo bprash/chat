@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/botui/build/botui.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/botui/build/botui-theme-default.css" />
+    <style>
+            .botui-container {  
+                background-color: #41c0cc;
+              background-image: linear-gradient(-90deg,#41c0cc,#41cca5);
+              width: 300px; 
+              font-size: 11px;
+                font-family: "Open Sans", sans-serif
+
+            }
+
+            .botui-messages-container { /*this is the container for the msg after the user has clicked*/
+              font-size: 11px;
+              padding-top: 2px;
+              padding-right: 20px;
+              padding-bottom: 0;
+
+
+            }
+
+            .botui-actions-container { /*everything related to the clikcable buttons*/
+              font-size: 11px;
+              /*padding-top: 0;
+              padding-right: 0;
+              padding-left: 0;*/
+            
+            }
+
+            .botui-actions-text-input {
+                border: 0;
+                outline: 0;
+                border-radius: 0;
+                padding: 5px 7px;
+                font-family: "Open Sans", sans-serif;
+                background-color: transparent;
+                color: #595a5a;
+                border-bottom: 1px solid #919292
+              }
+            .botui-actions-text-submit {
+                color: #fff;
+                width: 30px;
+                padding: 5px;
+                height: 30px;
+                line-height: 1;
+                border-radius: 50%;
+                border: 1px solid #919292;
+                background: #777979
+              }
+
+            .botui-actions-buttons {
+                text-align: center;
+            }
+
+            .botui-message {
+              font-size: 11px;
+              min-height: 30px
+
+            }
+            .botui-message-content.text{ /*this is the bot's questions*/
+              background-color: #e1fafc;
+              color: #404040;
+              font-size: 11px;
+
+            }
+            .botui-message-content.human{/*this is the user's response after cliking on*/
+              background-color: #f7ff61;
+              color: #404040;
+              font-size: 11px;
+            }
+
+            .botui-message-content-link {
+              font-size: 14px;
+            }
+
+            .botui-actions-text-input {
+              background-color: #e1fafc;
+              color: #404040;
+              font-size: 14px;
+            }
+
+            .botui-actions-text-submit {
+              font-size: 14px;
+            }
+
+            .botui-actions-buttons-button {
+              
+              padding: 7px 10px;
+              font-size: 7px; /*to increase/decrease size of the button*/
+              border: none;
+              cursor: pointer;
+              opacity: 0.8;
+              font-size: 11px;
+              
+            }
+            .open-button { /*this is the chat button that is in grey*/
+              background-color: #555;
+              color: white;
+              padding: 16px 20px; /*to increase/decrease size of the button*/
+              border: none;
+              cursor: pointer;
+              opacity: 0.8;
+              position: fixed;
+              bottom: 15px;
+              right: 15px;
+              width: 300px;
+              font-size: 15px;
+            }
+            /* The popup chat - hidden by default */
+            .chat-popup {
+              display: none;
+              position: fixed;
+              bottom: 0;
+              right: 10px;
+              border: 3px solid #f1f1f1; /*border for the chat window*/
+              z-index: 9;
+              width: 300px;
+            }
+
+            /* Add styles to the form container */
+            .form-container {
+              max-width: 500px;
+              padding: 10px;
+              background-color: white;
+            }
+
+            /* Full-width textarea */
+            .form-container textarea {
+              width: 100%;
+              /*padding: 25px;*/
+              margin: 5px 0 5px 0;
+              border: none;
+              background: #f1f1f1;
+              resize: none;
+              min-height: 100px;
+            }
+
+            /* When the textarea gets focus, do something */
+            .form-container textarea:focus {
+              background-color: #4CAF50;
+              outline: none;
+            }
+
+            /* Set a style for the submit/send button */
+            .form-container .btn {
+              background-color: #4CAF50;
+              color: white;
+              padding: 16px 20px;
+              border: none;
+              cursor: pointer;
+              width: 100%;
+              margin-bottom:0;
+              opacity: 0.8;
+            }
+
+
+
+            /* Add a red background color to the cancel button */
+            .form-container .cancel {
+              background-color: black;
+
+
+              
+            }
+
+            /* Add some hover effects to buttons */
+            .form-container .btn:hover, .open-button:hover {
+              opacity: 1;
+           }
+    </style>
+</head>
+
+<body>
+    <button class="open-button" onclick="openForm()">Chat</button>
+    <div class="chat-popup" id="myForm">
+        <div class="botui-app-container" id="reminder-bot">
+            <bot-ui id="hi"></bot-ui>
+        </div>
+        <!-- <div class="chat-message clearfix">
+        <textarea name="message-to-send" id="message-to-send" placeholder ="Type your message" rows="3"></textarea>
+       -->
+        <form action="/action_page.php" class="form-container">
+            <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/vue/latest/vue.min.js"></script>
+    <script src="https://unpkg.com/botui/build/botui.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <!--<script type="text/javascript" src="{{ url_for('static', filename = 'reminder-bot.js') }}"></script>-->
+    <script>
+    var botui = new BotUI('reminder-bot');
+
+    function messages(dict) {
+        botui.message
+            .bot({
+                loading: true,
+                delay: 2000,
+                content: 'Hi, my name is Teller! I can help you with your Bank related queries. Please select a quick link below'
+            })
+            .then(function() {
+                return botui.action.button({
+                    delay: 1000,
+                    action: [{
+                        text: 'Loan Application',
+                        value: 'loan'
+                    }, {
+                        text: 'Interest rates',
+                        value: 'intrates'
+                    }, {
+                        text: 'Account Information',
+                        value: 'account'
+                    }, {
+                        text: 'I have some other query',
+                        value: 'other'
+                    }]
+                })
+            }).then(function(res) {
+                if (res.value == 'loan') {
+                    botui.message
+                        .bot({
+                            loading: true,
+                            delay: 1000,
+                            content: 'Great! Just answer a few questions and we\'ll get your loan application started.',
+                        })
+                        .then(function() {
+                            return botui.action.button({
+                                delay: 1000,
+                                action: [{
+                                    text: 'Okay!',
+                                    value: 'yes'
+                                }, {
+                                    text: 'No, I have a different query!',
+                                    value: 'no'
+                                }]
+                            })
+                        }).then(function(res) {
+                            if (res.value == 'yes') {
+                                botui.message
+                                    .bot({
+                                        delay: 500,
+                                        content: 'Please enter your full name'
+                                    }).then(function() {
+                                        return botui.action.text({
+                                            delay: 1000,
+                                            action: {
+                                                placeholder: 'Arun, Kumar'
+                                            }
+                                        })
+                                    }).then(function(res) {
+                                        if (res.value !== null) {
+                                            dict['name'] = res.value;
+                                            console.log(dict)
+                                            // pass_data('loan','name', res.value) //this is where  i pass this data to the backend
+                                            botui.message
+                                                .bot({
+                                                    delay: 500,
+                                                    content: 'Please enter your age',
+                                                }).then(function() {
+                                                    return botui.action.text({
+                                                        delay: 1000,
+                                                        action: {
+                                                            placeholder: '30'
+                                                        }
+                                                    })
+                                                }).then(function(res) {
+                                                    if (res.value != null) {
+                                                        dict['age'] = res.value;
+                                                        // pass_data('loan','age', res.value)
+                                                    }
+
+                                                }).then(function() {
+                                                    botui.message
+                                                        .bot({
+                                                            loading: true,
+                                                            delay: 1000,
+                                                            content: 'Thank you for answering the questions. We have noted your details and will get back to you shortly',
+                                                            }).then(function(){
+                                                              botui.message.bot({
+                                                            loading: true,
+                                                            delay: 1000,
+                                                            content: 'In case of any other queries, please click on the button below',
+                                                            }).then(function(){
+                                                              return botui.action.button({
+                                                                      delay: 1000,
+                                                                      action: [{
+                                                                          text: 'Okay!',
+                                                                          value: 'yes'
+                                                                      }, {
+                                                                          text: 'No, I have a different query!',
+                                                                          value: 'no'
+                                                                      }]
+                                                                  }).then(function(res){
+                                                                    if(res.value == 'no'){
+                                                                      return botui.action.text({
+                                                                                delay: 1000,
+                                                                                action: {
+                                                                                    placeholder: 'Type your query'
+                                                                                }
+                                                                            }).then(function(res){
+                                                                               dict['query'] = res.value;
+                                                                            })
+
+                                                                      .then(function(){
+                                                                              botui.message.bot({
+                                                                                loading:true,
+                                                                                delay:1000,
+                                                                                content:'We have noted it down and will get back shortly. If there is anything else you want us to help you with please let us know'
+                                                                              }).then(function(){
+                                                                                return botui.action.button({
+                                                                      delay: 1000,
+                                                                      action: [{
+                                                                          text: 'Thank you!',
+                                                                          value: 'yes'
+                                                                      }]
+                                                                  }).then(function(){
+                                                                     pass_data(dict) 
+                                                                  })
+                                                                              })
+                                                                            })
+                                                                    }
+                                                                  })
+                                                                                                  })
+                                                            })
+                                                })
+                                        }
+                                    })
+                            } else {
+                                customquery(dict);
+                            }
+                        });
+                    //an empty string and the res.value will be passed to the function
+                    //res.value contains the type of button clicked.
+                }
+                if (res.value == 'other') {
+                    customquery(dict);
+                }
+            });
+    }
+    var customquery = function(dict) {
+
+        botui.message.bot({
+                delay: 2000,
+                loading: true,
+                cssClass: 'custom-class',
+                content: 'Take a look at the common queries below. If you don\'t find yours in them, feel free to type it out!'
+            })
+            .then(function() {
+                return botui.action.button({
+                    delay: 2000,
+                    action: [{
+                        text: 'Bank interest rates',
+                        value: 'intrates'
+                    }, {
+                        text: 'How to apply for a home loan?',
+                        value: 'homeloanapplication'
+                    }, {
+                        text: 'Type my query!',
+                        value: 'customquery'
+                    }]
+                })
+            }).then(function(res) {
+                if (res.value == 'customquery') {
+                    botui.message
+                        .bot({
+                            delay: 500,
+                            content: 'You can type your query below!'
+                        }).then(function() {
+                            return botui.action.text({
+                                delay: 1000,
+                                action: {
+                                    placeholder: 'Type here...'
+                                }
+                            })
+                        }).then(function(res) {
+                            botui.message
+                                .bot({
+                                    delay: 500,
+                                    content: 'Your query is : ' + res.value,
+                                })
+                            dict['query'] = res.value;
+                            // pass_data('query','query', res.value) //where i pass the query back to the flask side 
+                        }).then(function(res) {
+
+                            botui.message
+                                .bot({
+                                    loading: true,
+                                    delay: 1500,
+                                    content: 'Thank you for your concern. We will get back to you on the same shortly.',
+                                })
+                        }).then(function() {
+                            pass_data(dict);
+                        })
+                }
+            })
+    }
+
+    var pass_data = function(dict) {
+
+
+        console.log(dict)
+        axios({
+                method: 'post',
+                url: 'http://127.0.0.1:8000/datapost',
+                data: dict,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }).then(function(response) {
+                //console.log("Hi")
+                dict2 = response;
+                console.log(dict2.data.value);
+            })
+            .catch(function(error) {
+                console.log(error);
+            });
+
+    }
+
+
+
+
+    function openForm() {
+
+
+        document.getElementById("myForm").style.display = "block";
+        console.log('opened')
+
+
+        dict = {};
+        messages(dict);
+
+    }
+
+    function closeForm() {
+        // $('#hi').empty();
+        console.log('closed')
+
+        document.getElementById("myForm").style.display = "none";
+
+        // $( "#hi" ).load(window.location.href + " #hi" )
+        botui.message.removeAll();
+        botui.action.hide();
+
+    }
+    </script>
+</body>
+
+</html>
