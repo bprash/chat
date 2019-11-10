@@ -8,12 +8,13 @@
     <link rel="stylesheet" href="https://unpkg.com/botui/build/botui.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/botui/build/botui-theme-default.css" />
     <style>
-            .botui-container {  
+        .botui-container {  
                 background-color: #41c0cc;
               background-image: linear-gradient(-90deg,#41c0cc,#41cca5);
               width: 300px; 
               font-size: 11px;
                 font-family: "Open Sans", sans-serif
+
 
             }
 
@@ -194,7 +195,7 @@
     <script src="https://unpkg.com/botui/build/botui.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-     <script>
+    <script>
     var botui = new BotUI('reminder-bot');
 
     function messages(dict) {
@@ -272,65 +273,64 @@
                                                 }).then(function(res) {
                                                     if (res.value != null) {
                                                         dict['age'] = res.value;
-                                                        // pass_data('loan','age', res.value)
+                                                        botui.message.bot({
+                                                            delay: 500,
+                                                            loading:true,
+                                                            content: 'How many years have you worked in a full time job?'
+                                                        }).then(function() {
+                                                            return botui.action.text({
+                                                                delay: 500,
+                                                                loading:true,
+                                                                action: {
+                                                                    placeholder: " "
+                                                                }
+                                                            })
+                                                        }).then(function(res) {
+                                                            if (res.value != null) {
+                                                                dict['experience'] = res.value;
+                                                                botui.message.bot({
+                                                                    delay: 500,
+                                                                    loading:true,
+                                                                    content: 'What is your highest degree/qualification?'
+                                                                }).then(function() {
+                                                                    return botui.action.text({
+                                                                        delay: 500,
+                                                                        loading:true,
+                                                                        action: {
+                                                                            placeholder: " "
+                                                                        }
+                                                                    })
+                                                                }).then(function(res) {
+                                                                    if (res.value != null) {
+                                                                        dict['qualification'] = res.value
+                                                                        botui.message.bot({
+                                                                            delay: 500,
+                                                                            loading:true,
+                                                                            content: 'Please enter your full address'
+                                                                        }).then(function() {
+                                                                            return botui.action.text({
+                                                                                delay: 500,
+                                                                                action: {
+                                                                                    placeholder: " "
+                                                                                }
+                                                                            })
+                                                                        }).then(function(res) {
+                                                                            if (res.value != null) {
+                                                                                dict['address'] = res.value
+
+                                                                            }
+                                                                        }).then(function() {
+                                                                            thankyou(dict)
+                                                                        })
+
+                                                                    }
+                                                                })
+
+                                                            }
+                                                        })
                                                     }
 
-                                                }).then(function() {
-                                                    botui.message
-                                                        .bot({
-                                                            loading: true,
-                                                            delay: 1000,
-                                                            content: 'Thank you for answering the questions. We have noted your details and will get back to you shortly',
-                                                            }).then(function(){
-                                                              botui.message.bot({
-                                                            loading: true,
-                                                            delay: 1000,
-                                                            content: 'In case of any other queries, please click on the button below',
-                                                            }).then(function(){
-                                                              return botui.action.button({
-                                                                      delay: 1000,
-                                                                      action: [{
-                                                                          text: 'Okay!',
-                                                                          value: 'yes'
-                                                                      }, {
-                                                                          text: 'No, I have a different query!',
-                                                                          value: 'no'
-                                                                      }]
-                                                                  }).then(function(res){
-                                                                    if(res.value == 'no'){
-                                                                      return botui.action.text({
-                                                                                delay: 1000,
-                                                                                action: {
-                                                                                    placeholder: 'Type your query'
-                                                                                }
-                                                                            }).then(function(res){
-                                                                               dict['query'] = res.value;
-                                                                            })
 
-                                                                      .then(function(){
-                                                                              botui.message.bot({
-                                                                                loading:true,
-                                                                                delay:1000,
-                                                                                content:'We have noted it down and will get back shortly. If there is anything else you want us to help you with please let us know'
-                                                                              }).then(function(){
-                                                                                return botui.action.button({
-                                                                      delay: 1000,
-                                                                      action: [{
-                                                                          text: 'Thank you!',
-                                                                          value: 'yes'
-                                                                      }]
-                                                                  }).then(function(){
-                                                                     pass_data(dict) 
-                                                                  })
-                                                                              })
-                                                                            })
-                                                                    }
-                                                                    else{
-                                                                      pass_data(dict)
-                                                                    }
-                                                                  })
-                                                                                                  })
-                                                            })
                                                 })
                                         }
                                     })
@@ -346,6 +346,64 @@
                 }
             });
     }
+
+    var thankyou = function(dict) {
+        botui.message
+            .bot({
+                loading: true,
+                delay: 1000,
+                content: 'Thank you for answering the questions. We have noted your details and will get back to you shortly',
+            }).then(function() {
+                botui.message.bot({
+                    loading: true,
+                    delay: 1000,
+                    content: 'In case of any other queries, please click on the button below',
+                }).then(function() {
+                    return botui.action.button({
+                        delay: 1000,
+                        action: [{
+                            text: 'Okay!',
+                            value: 'yes'
+                        }, {
+                            text: 'No, I have a different query!',
+                            value: 'no'
+                        }]
+                    }).then(function(res) {
+                        if (res.value == 'no') {
+                            return botui.action.text({
+                                    delay: 1000,
+                                    action: {
+                                        placeholder: 'Type your query'
+                                    }
+                                }).then(function(res) {
+                                    dict['query'] = res.value;
+                                })
+
+                                .then(function() {
+                                    botui.message.bot({
+                                        loading: true,
+                                        delay: 1000,
+                                        content: 'We have noted it down and will get back shortly. If there is anything else you want us to help you with please let us know'
+                                    }).then(function() {
+                                        return botui.action.button({
+                                            delay: 1000,
+                                            action: [{
+                                                text: 'Thank you!',
+                                                value: 'yes'
+                                            }]
+                                        }).then(function() {
+                                            pass_data(dict)
+                                        })
+                                    })
+                                })
+                        } else {
+                            pass_data(dict)
+                        }
+                    })
+                })
+            })
+    }
+
     var customquery = function(dict) {
 
         botui.message.bot({
@@ -382,33 +440,35 @@
                                 }
                             })
                         }).then(function(res) {
-                            
+
                             dict['query'] = res.value;
 
                             $.ajax({
-                              url: 'query',
-                              data : {'query':res.value},
-                              dataType: 'json',
-                              success: function(data){
-                                var obj = JSON.parse(data)
+                                url: 'query',
+                                data: { 'query': res.value },
+                                dataType: 'json',
+                                success: function(data) {
+                                    var obj = JSON.parse(data)
 
-                                dict['query_response']=obj['query']
-                                console.log(obj['query'])
-                                if (obj['query'] != null){
-                                botui.message.bot({
-                                    delay: 2000,
-                                    loading: true,
-                                    cssClass: 'custom-class',
-                                    content: obj['query']
-                                })
-                              }
-                              else{botui.message
-                                .bot({
-                                    loading: true,
-                                    delay: 1500,
-                                    content: 'Thank you for your concern. We will get back to you on the same shortly.',
-                                })}
-                              }})
+                                    dict['query_response'] = obj['query']
+                                    console.log(obj['query'])
+                                    if (obj['query'] != null) {
+                                        botui.message.bot({
+                                            delay: 2000,
+                                            loading: true,
+                                            cssClass: 'custom-class',
+                                            content: obj['query']
+                                        })
+                                    } else {
+                                        botui.message
+                                            .bot({
+                                                loading: true,
+                                                delay: 1500,
+                                                content: 'Thank you for your concern. We will get back to you on the same shortly.',
+                                            })
+                                    }
+                                }
+                            })
                             // pass_data('query','query', res.value) //where i pass the query back to the flask side 
                         }).then(function() {
                             pass_data(dict);
@@ -422,18 +482,18 @@
         console.log(dict)
 
         $.ajax({
-          url: 'validate',
-          data : dict,
-          dataType: 'json',
-          success: function(data){
-            
-            var obj = JSON.parse(data)
+            url: 'validate',
+            data: dict,
+            dataType: 'json',
+            success: function(data) {
+
+                var obj = JSON.parse(data)
 
 
-            console.log(obj['query'])
+                console.log(obj['query'])
 
-            
-          }
+
+            }
         })
         // axios({
         //         method: 'post',
